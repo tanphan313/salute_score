@@ -1,0 +1,49 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <option name="scopesOrder">
+      <list>
+        <option value="All Changed Files" />
+        <option value="Open Files" />
+        <option value="Project Files" />
+        <option value="Scratches and Consoles" />
+        <option value="Tests" />
+      </list>
+    </option>
+    <inspection_tool class="Rubocop" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="RubyArgCount" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="RubyCaseWithoutElseBlockInspection" enabled="false" level="WARNING" enabled_by_default="false" />
+    <inspection_tool class="RubyClassMethodNamingConvention" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="m_maxLength" value="60" />
+    </inspection_tool>
+    <inspection_tool class="RubyClassVariableNamingConvention" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="m_maxLength" value="60" />
+    </inspection_tool>
+    <inspection_tool class="RubyDefParenthesesInspection" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
+    <inspection_tool class="RubyGlobalVariableNamingConvention" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="m_maxLength" value="60" />
+    </inspection_tool>
+    <inspection_tool class="RubyInstanceMethodNamingConvention" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="m_maxLength" value="60" />
+    </inspection_tool>
+    <inspection_tool class="RubyLiteralArrayInspection" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
+    <inspection_tool class="RubyResolve" enabled="true" level="WARNING" enabled_by_default="true" editorAttributes="ERRORS_ATTRIBUTES">
+      <option name="warnImplicitResults" value="false" />
+    </inspection_tool>
+    <inspection_tool class="RubyTooManyInstanceVariablesInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="m_limit" value="90" />
+    </inspection_tool>
+    <inspection_tool class="RubyTooManyMethodsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="m_limit" value="90" />
+    </inspection_tool>
+    <inspection_tool class="SpellCheckingInspection" enabled="false" level="TYPO" enabled_by_default="false">
+      <option name="processCode" value="true" />
+      <option name="processLiterals" value="true" />
+      <option name="processComments" value="true" />
+    </inspection_tool>
+    <inspection_tool class="SqlResolveInspection" enabled="true" level="ERROR" enabled_by_default="false">
+      <scope name="Open Files" level="ERROR" enabled="false" />
+      <scope name="Scratches and Consoles" level="ERROR" enabled="true" />
+    </inspection_tool>
+  </profile>
+</component>

@@ -1,0 +1,20 @@
+# Be sure to restart your server when you modify this file.
+
+# Avoid CORS issues when API is called from the frontend app.
+# Handle Cross-Origin Resource Sharing (CORS) in order to accept cross-origin Ajax requests.
+
+# Read more: https://github.com/cyu/rack-cors
+#
+# Auth is header-based (devise_token_auth), so browsers must be allowed to read
+# access-token / client / uid / expiry / token-type on responses.
+
+Rails.application.config.middleware.insert_before 0, Rack::Cors do
+  allow do
+    origins "*"
+
+    resource "*",
+      headers: :any,
+      methods: %i[get post put patch delete options head],
+      expose: ["X-Signin-Token", "access-token", "expiry", "token-type", "uid", "client"]
+  end
+end
