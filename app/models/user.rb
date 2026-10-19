@@ -3,7 +3,12 @@ class User < ApplicationRecord
 
   include DeviseTokenAuth::Concerns::User
 
+  belongs_to :country, optional: true
+
   validates :address, presence: true, uniqueness: true
+  validates :name, uniqueness: true, allow_nil: true
+  validates :phone_number, uniqueness: true, allow_nil: true
+  validates :email, uniqueness: true, allow_nil: true
 
   def email_required?
     false

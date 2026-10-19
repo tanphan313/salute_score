@@ -17,7 +17,6 @@ class ApplicationController < ActionController::API
   end
 
   private
-
   def render_not_found
     render_error(message: "Resource not found", status: :not_found)
   end

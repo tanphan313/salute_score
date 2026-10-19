@@ -7,7 +7,7 @@ class CreateUsers < ActiveRecord::Migration[8.0]
       t.string :encrypted_password, null: false, default: ""
       t.json :tokens
 
-      t.string :address, null: false         # Public Address (account)
+      t.string :address
       t.string :user_token
       t.string :name
       t.string :avatar_url

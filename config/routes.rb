@@ -12,5 +12,6 @@ Rails.application.routes.draw do
   post 'xaman/request_signin', to: 'xaman_auth#request_signin'
   post 'xaman/verify_signin', to: 'xaman_auth#verify_signin'
 
-  resource :profile, only: [:show]
+  resource :profile, only: [:show, :update]
+  post 'validations/check_uniqueness', to: 'validations#check_uniqueness'
 end

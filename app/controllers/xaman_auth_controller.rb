@@ -40,13 +40,10 @@ class XamanAuthController < ApplicationController
     if xaman_data && xaman_data[:account].present?
       Rails.cache.delete("xaman_signin:#{signin_token}")
 
-      user = User.find_or_create_by!(address: xaman_data[:account]) do |u|
-        u.uid = xaman_data[:account]
-        u.provider = "xaman"
-        u.user_token = xaman_data[:user_token]
-        u.name = xaman_data[:name]
-        u.avatar_url = xaman_data[:avatar_url]
-      end
+      existing_user = User.find_by(address: xaman_data[:account])
+      is_new_user = existing_user.nil?
+
+      user = existing_user || User.new(address: xaman_data[:account], uid: xaman_data[:account], provider: "xaman")
 
       user.update(
         user_token: xaman_data[:user_token],
@@ -59,13 +56,14 @@ class XamanAuthController < ApplicationController
 
       render_success(
         data: {
+          is_new_user: is_new_user,
           id: user.id,
           address: user.address,
           user_token: user.user_token,
           name: user.name,
           avatar_url: user.avatar_url
         },
-        message: "Signed in successfully"
+        message: is_new_user ? "Account created. Profile setup required." : "Signed in successfully"
       )
     else
       render_error(message: "Payload not signed yet or verification failed", status: :unauthorized)
