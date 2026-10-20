@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_19_183427) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_20_075249) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -38,6 +38,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_183427) do
     t.string "phone_number"
     t.string "email"
     t.bigint "country_id"
+    t.integer "verification_level", default: 0
+    t.integer "custom_max_borrowing_amount"
     t.index ["address"], name: "index_users_on_address", unique: true
     t.index ["country_id"], name: "index_users_on_country_id"
     t.index ["email"], name: "index_users_on_email"
