@@ -27,6 +27,8 @@ class BorrowRequest < ApplicationRecord
     joins(:borrower).order("users.score #{direction.to_s.upcase}")
   }
 
+  scope :active, -> { where(status: %i[pending locked]) }
+
   def self.ransackable_attributes(_auth_object = nil)
     %w[id borrower_id token_symbol amount proposed_interest_rate duration_in_days status created_at]
   end
@@ -79,10 +81,10 @@ class BorrowRequest < ApplicationRecord
       return
     end
 
-    new_request_amount = (amount * current_token_rate.price_in_cents).round
+    new_request_amount = (amount * (current_token_rate.&price_in_cents || 0.0)).round
     current_funded_amount = borrower.borrow_requests.funded.sum(:funded_amount)
     active_pending_cents = borrower.borrow_requests
-      .where(status: %i[pending locked])
+      .active
       .joins("INNER JOIN token_rates ON token_rates.symbol = borrow_requests.token_symbol")
       .sum(Arel.sql("ROUND(borrow_requests.amount * token_rates.price_in_cents)"))
       .to_i
