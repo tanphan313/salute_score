@@ -1,7 +1,8 @@
 class ProfilesController < ApplicationController
+  UPDATE_PARAMS = %i[country_id phone_number name email].freeze
+
   def show
-    xaman_client = Xaman::Client.new
-    xaman_info = xaman_client.get_account_info(current_user.address) || xaman_client.get_xrpl_account_info(current_user.address)
+    xaman_info = Xaman.client.accounts.find(current_user.address)
 
     render_success(
       data: {
@@ -31,14 +32,13 @@ class ProfilesController < ApplicationController
 
   private
   def profile_params
-    params.require(:profile).permit(:country_id, :phone_number, :name, :email)
+    params.require(:profile).permit(UPDATE_PARAMS)
   end
 
   def user_payload(user)
     {
       id: user.id,
       address: user.address,
-      user_token: user.user_token,
       name: user.name,
       email: user.email,
       phone_number: user.phone_number,

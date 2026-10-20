@@ -7,7 +7,6 @@ class ApplicationController < ActionController::API
   rescue_from ActiveRecord::RecordInvalid, with: :render_unprocessable_entity
 
   protected
-
   def render_success(data: {}, message: "Success", status: :ok)
     render json: { success: true, message: message, data: data }, status: status
   end

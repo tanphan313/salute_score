@@ -1,72 +1,99 @@
 class XamanAuthController < ApplicationController
   skip_before_action :authenticate_user!
 
+  SIGNIN_TOKEN_PREFIX = "xaman_signin:"
+  SIGNIN_TOKEN_TTL = 5.minutes
+
   def request_signin
-    xaman_client = Xaman::Client.new
-    payload_data = xaman_client.create_signin_payload
+    payload_data = Xaman.client.payloads.create_signin
 
-    if payload_data && payload_data[:uuid]
-      signin_token = SecureRandom.hex(16)
-
-      Rails.cache.write("xaman_signin:#{signin_token}", payload_data[:uuid], expires_in: 5.minutes)
-
-      response.headers["X-Signin-Token"] = signin_token
-
-      render_success(
-        data: payload_data,
-        message: "SignIn payload created successfully. Token issued in X-Signin-Token header."
+    unless payload_data[:success] && payload_data[:data][:uuid].present?
+      return render_error(
+        message: "Failed to create Xaman payload",
+        status: :unprocessable_entity
       )
-    else
-      render_error(message: "Failed to create Xaman payload", status: :unprocessable_entity)
     end
+
+    signin_token = SecureRandom.hex(32)
+
+    Rails.cache.write(
+      "#{SIGNIN_TOKEN_PREFIX}#{signin_token}",
+      payload_data[:data][:uuid],
+      expires_in: SIGNIN_TOKEN_TTL
+    )
+
+    response.headers["X-Signin-Token"] = signin_token
+
+    render_success(
+      data: payload_data[:data],
+      message: "SignIn payload created successfully"
+    )
   end
 
   def verify_signin
     signin_token = request.headers["X-Signin-Token"]
 
     if signin_token.blank?
-      return render_error(message: "Missing X-Signin-Token header", status: :bad_request)
+      return render_error(
+        message: "Missing X-Signin-Token header",
+        status: :bad_request
+      )
     end
 
-    payload_uuid = Rails.cache.read("xaman_signin:#{signin_token}")
+    cache_key = "#{SIGNIN_TOKEN_PREFIX}#{signin_token}"
+    payload_uuid = Rails.cache.read(cache_key)
 
     if payload_uuid.blank?
-      return render_error(message: "Invalid or expired signin session", status: :unauthorized)
+      return render_error(
+        message: "Invalid or expired signin session",
+        status: :unauthorized
+      )
     end
 
-    xaman_client = Xaman::Client.new
-    xaman_data = xaman_client.verify_payload(payload_uuid)
+    xaman_data = Xaman.client.payloads.verify_signin(payload_uuid)
 
-    if xaman_data && xaman_data[:account].present?
-      Rails.cache.delete("xaman_signin:#{signin_token}")
-
-      existing_user = User.find_by(address: xaman_data[:account])
-      is_new_user = existing_user.nil?
-
-      user = existing_user || User.new(address: xaman_data[:account], uid: xaman_data[:account], provider: "xaman")
-
-      user.update(
-        user_token: xaman_data[:user_token],
-        name: xaman_data[:name] || user.name,
-        avatar_url: xaman_data[:avatar_url] || user.avatar_url
+    unless xaman_data[:success] && xaman_data[:data][:account].present?
+      return render_error(
+        message: "Payload not signed yet or verification failed",
+        status: :unauthorized
       )
-
-      auth_headers = user.create_new_auth_token
-      response.headers.merge!(auth_headers)
-
-      render_success(
-        data: {
-          is_new_user: is_new_user,
-          id: user.id,
-          address: user.address,
-          user_token: user.user_token,
-          name: user.name,
-          avatar_url: user.avatar_url
-        },
-        message: is_new_user ? "Account created. Profile setup required." : "Signed in successfully"
-      )
-    else
-      render_error(message: "Payload not signed yet or verification failed", status: :unauthorized)
     end
+
+    address = xaman_data[:data][:account]
+    account_info = Xaman.client.accounts.find(address)
+
+    user = User.find_or_initialize_by(address: address)
+    is_new_user = user.new_record?
+
+    attributes = {
+      uid: address,
+      provider: "xaman",
+      name: xaman_data[:data][:name].presence || user.name,
+      user_token: xaman_data[:data][:user_token],
+      avatar_url: account_info[:data]["avatar"].presence || user.avatar_url
+    }
+
+    unless user.update(attributes)
+      return render_error(
+        message: user.errors.full_messages.to_sentence,
+        status: :unprocessable_entity
+      )
+    end
+
+    Rails.cache.delete(cache_key)
+
+    auth_headers = user.create_new_auth_token
+    response.headers.merge!(auth_headers)
+
+    render_success(
+      data: {
+        is_new_user: is_new_user,
+        id: user.id,
+        address: user.address,
+        name: user.name,
+        avatar_url: user.avatar_url
+      },
+      message: is_new_user ? "Account created. Profile setup required." : "Signed in successfully"
+    )
   end
 end
