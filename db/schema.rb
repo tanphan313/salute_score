@@ -10,9 +10,36 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_20_075249) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_20_174922) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "borrow_request_lenders", force: :cascade do |t|
+    t.bigint "borrow_request_id"
+    t.bigint "lender_id"
+    t.integer "status", default: 0
+    t.datetime "locked_until"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["borrow_request_id"], name: "index_borrow_request_lenders_on_borrow_request_id"
+    t.index ["lender_id"], name: "index_borrow_request_lenders_on_lender_id"
+  end
+
+  create_table "borrow_requests", force: :cascade do |t|
+    t.bigint "borrower_id"
+    t.decimal "amount", precision: 40, scale: 24
+    t.string "token_symbol", default: "SLT"
+    t.decimal "proposed_interest_rate", precision: 5, scale: 2
+    t.integer "duration_in_days"
+    t.integer "status", default: 0
+    t.datetime "locked_until"
+    t.datetime "funded_at"
+    t.integer "funded_amount"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["borrower_id"], name: "index_borrow_requests_on_borrower_id"
+    t.index ["status"], name: "index_borrow_requests_on_status"
+  end
 
   create_table "countries", force: :cascade do |t|
     t.string "name"
@@ -22,6 +49,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_20_075249) do
     t.datetime "updated_at", null: false
     t.index ["code"], name: "index_countries_on_code", unique: true
     t.index ["name"], name: "index_countries_on_name", unique: true
+  end
+
+  create_table "token_rates", force: :cascade do |t|
+    t.string "symbol", null: false
+    t.string "name"
+    t.integer "price_in_cents", default: 0
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["symbol"], name: "index_token_rates_on_symbol", unique: true
   end
 
   create_table "users", force: :cascade do |t|
@@ -40,6 +76,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_20_075249) do
     t.bigint "country_id"
     t.integer "verification_level", default: 0
     t.integer "custom_max_borrowing_amount"
+    t.integer "score", default: 0
     t.index ["address"], name: "index_users_on_address", unique: true
     t.index ["country_id"], name: "index_users_on_country_id"
     t.index ["email"], name: "index_users_on_email"

@@ -39,4 +39,19 @@ namespace :seed_db do
 
     puts "Countries seed completed successfully!"
   end
+
+  task seed_token_rates: :environment do
+    token_rates = [
+      { token_symbol: "SLT", name: "Salute", price_in_cents: 100 },
+      { token_symbol: "rLUSD", name: "rLUSD", price_in_cents: 26000 }
+    ]
+
+    token_rates.each do |data|
+      token_rate = TokenRate.find_or_initialize_by(token_symbol: data[:token_symbol])
+      country.update!(
+        name: data[:name],
+        price_in_cents: data[:price_in_cents]
+      )
+    end
+  end
 end

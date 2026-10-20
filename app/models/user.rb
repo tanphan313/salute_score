@@ -11,9 +11,12 @@ class User < ApplicationRecord
   }.freeze
 
   enum :verification_level, %i(wallet phone id_check income), prefix: true
-  enum :ranking_level, %i(silver gold platinum), prefix: true
+  enum :ranking_level, %i(bronze silver gold platinum), prefix: true
 
   belongs_to :country, optional: true
+
+  has_many :borrow_requests, foreign_key: "borrower_id", dependent: :destroy
+  has_many :borrow_request_lenders, foreign_key: "lender_id", dependent: :destroy
 
   validates :address, presence: true, uniqueness: true
   validates :name, uniqueness: true, allow_nil: true

@@ -14,4 +14,6 @@ Rails.application.routes.draw do
 
   resource :profile, only: [:show, :update]
   post 'validations/check_uniqueness', to: 'validations#check_uniqueness'
+
+  resources :borrow_requests, only: [:create, :index]
 end
