@@ -2,7 +2,7 @@ class BorrowRequest < ApplicationRecord
   belongs_to :borrower, class_name: "User", foreign_key: "borrower_id"
   belongs_to :token_rate
 
-  has_one :borrow_request_lender
+  has_many :borrow_request_lenders
 
   DURATIONS = {
     days_7: 7,
@@ -13,7 +13,7 @@ class BorrowRequest < ApplicationRecord
   }.freeze
 
   enum :duration_in_days, DURATIONS, prefix: :duration
-  enum :status, %i[pending locked funded cancelled expired repaid]
+  enum :status, [:pending, :locked, :funded, :cancelled]
 
   validates :amount, presence: true, numericality: { greater_than: 0 }
   validates :proposed_interest_rate, presence: true, numericality: { greater_than_or_equal_to: 0 }
@@ -66,49 +66,6 @@ class BorrowRequest < ApplicationRecord
     return 0 if amount.nil?
 
     amount + interest_amount + salute_interest_amount
-  end
-
-  def repay_by_date(from_date = Time.current)
-    due_date || (from_date + duration_in_days.to_i.days if duration_in_days.present?)
-  end
-
-  def due_date
-    return nil if funded_at.nil? || duration_in_days.blank?
-
-    funded_at + duration_in_days.to_i.days
-  end
-
-  def overdue?
-    return false unless funded? && due_date.present?
-
-    Time.current > due_date
-  end
-
-  def repaid_on_time?
-    return false unless repaid? && repaid_at.present? && due_date.present?
-
-    repaid_at <= due_date
-  end
-
-  def days_overdue
-    target_time = repaid_at || Time.current
-    return 0 if due_date.nil? || target_time <= due_date
-
-    ((target_time - due_date) / 1.day).ceil
-  end
-
-  def mark_as_repaid!
-    return false unless funded?
-
-    update!(
-      status: :repaid,
-      repaid_at: Time.current
-    )
-  end
-
-  def formatted_repay_by_date(format = "%d/%m/%Y")
-    date = repay_by_date
-    date&.strftime(format)
   end
 
   private

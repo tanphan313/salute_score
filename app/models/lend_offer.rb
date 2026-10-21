@@ -6,7 +6,7 @@ class LendOffer < ApplicationRecord
 
   ALLOWED_DURATIONS = [7, 14, 30, 60, 90].freeze
 
-  enum :status, %i[active fulfilled cancelled expired]
+  enum :status, %i[pending partial_fulfilled fulfilled cancelled]
 
   enum :lowest_tier, User.ranking_levels, prefix: :tier
   enum :required_verification_level, User.verification_levels, prefix: :verification

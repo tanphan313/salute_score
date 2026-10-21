@@ -3,7 +3,7 @@ class LendOfferBorrower < ApplicationRecord
   belongs_to :borrower, class_name: "User", foreign_key: "borrower_id"
   has_one :token_rate, through: :lend_offer
 
-  enum :status, %i[locking funded repaid cancelled]
+  enum :status, %i[locking funded cancelled]
 
   validates :amount, presence: true, numericality: { greater_than: 0 }
   validates :duration_in_days, presence: true

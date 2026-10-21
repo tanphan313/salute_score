@@ -42,8 +42,8 @@ namespace :seed_db do
 
   task seed_token_rates: :environment do
     token_rates = [
-      { symbol: "SLT", name: "Salute", price_in_cents: 100 },
-      { symbol: "rLUSD", name: "rLUSD", price_in_cents: 26000 }
+      { symbol: "SLT", name: "Salute", price_in_cents: 100, issuer_address: "rfGCeDUdtbzKbXfgvrpG745qdC1hcZBz8S" },
+      { symbol: "RLUSD", name: "RLUSD", price_in_cents: 26000, issuer_address: "rMxCKbEDwqr76QuheSUMdEGf4B9xJ8m5De" }
     ]
 
     token_rates.each do |data|

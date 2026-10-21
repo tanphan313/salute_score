@@ -36,64 +36,10 @@ module Xaman
       }
     end
 
-    def create_signin
-      create(
-        txjson: {
-          TransactionType: "SignIn"
-        }
-      )
-    end
-
     def find(uuid)
       api_request do
         @connection.get("payload/#{uuid}")
       end
-    end
-
-    def status(uuid)
-      result = find(uuid)
-      return result unless result[:success]
-
-      payload = result[:data]
-      meta = payload["meta"] || {}
-      response = payload["response"] || {}
-
-      {
-        success: true,
-        data: {
-          uuid: payload["uuid"] || uuid,
-          resolved: meta["resolved"],
-          signed: meta["signed"],
-          cancelled: meta["cancelled"],
-          expired: meta["expired"],
-          account: response["account"],
-          transaction_id: response["txid"],
-          user_token: payload.dig("application", "issued_user_token")
-        },
-        error: nil
-      }
-    end
-
-    def verify_signin(uuid)
-      result = find(uuid)
-      return result unless result[:success]
-
-      payload = result[:data]
-      meta = payload["meta"] || {}
-
-      unless meta["resolved"] == true && meta["signed"] == true
-        return failure_response("Payload has not been successfully signed")
-      end
-
-      {
-        success: true,
-        data: {
-          account: payload.dig("response", "account"),
-          name: payload.dig("response", "account_alias"),
-          avatar_url: payload.dig("response", "account_avatar")
-        },
-        error: nil
-      }
     end
   end
 end

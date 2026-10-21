@@ -1,5 +1,5 @@
 json.results do
-  json.array! @borrow_requests, partial: "me/borrow_requests/borrow_request", as: :borrow_request
+  json.array! @borrow_requests, partial: "shared/borrow_requests/borrow_request", as: :borrow_request
 end
 
 json.set! :num_pages, @borrow_requests.total_pages
