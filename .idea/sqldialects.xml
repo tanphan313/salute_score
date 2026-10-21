@@ -2,5 +2,6 @@
 <project version="4">
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/app/models/borrow_request.rb" dialect="GenericSQL" />
+    <file url="file://$PROJECT_DIR$/app/models/lend_offer.rb" dialect="GenericSQL" />
   </component>
 </project>

@@ -17,6 +17,8 @@ class User < ApplicationRecord
 
   has_many :borrow_requests, foreign_key: "borrower_id", dependent: :destroy
   has_many :borrow_request_lenders, foreign_key: "lender_id", dependent: :destroy
+  has_many :lend_offers, foreign_key: "lender_id", dependent: :destroy
+  has_many :lend_offer_borrowers, foreign_key: "borrower_id", dependent: :destroy
 
   validates :address, presence: true, uniqueness: true
   validates :name, uniqueness: true, allow_nil: true

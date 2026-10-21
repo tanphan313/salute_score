@@ -21,6 +21,10 @@ module Me
       render :index
     end
 
+    def show
+      @borrow_request = current_user.borrow_requests.find(params[:id])
+    end
+
     private
     def sort_column
       SORT_COLUMN[params[:sort]] || SORT_COLUMN[:created_at]

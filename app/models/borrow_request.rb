@@ -1,6 +1,8 @@
 class BorrowRequest < ApplicationRecord
   belongs_to :borrower, class_name: "User", foreign_key: "borrower_id"
-  has_many :borrow_request_lenders
+  belongs_to :token_rate
+
+  has_one :borrow_request_lender
 
   DURATIONS = {
     days_7: 7,
@@ -15,7 +17,7 @@ class BorrowRequest < ApplicationRecord
 
   validates :amount, presence: true, numericality: { greater_than: 0 }
   validates :proposed_interest_rate, presence: true, numericality: { greater_than_or_equal_to: 0 }
-  validates :duration_in_days, :token_symbol, presence: true
+  validates :duration_in_days, :token_rate_id, presence: true
   validate  :validate_borrower_limit, on: :create
 
   scope :order_by_interest, ->(direction = :desc) {
@@ -37,15 +39,15 @@ class BorrowRequest < ApplicationRecord
   }
 
   def self.ransackable_attributes(_auth_object = nil)
-    %w[id borrower_id token_symbol amount proposed_interest_rate duration_in_days status created_at repaid_at]
+    %w[id borrower_id token_rate_id amount proposed_interest_rate duration_in_days status created_at repaid_at]
   end
 
   def self.ransackable_associations(_auth_object = nil)
-    %w[borrower]
+    %w[borrower token_rate]
   end
 
   def self.ransackable_scopes(_auth_object = nil)
-    %i[order_by_interest order_by_borrower_score]
+    %i[order_by_interest order_by_borrower_score repaid_between]
   end
 
   def interest_amount
@@ -111,17 +113,14 @@ class BorrowRequest < ApplicationRecord
 
   private
   def validate_borrower_limit
-    current_token_rate = TokenRate.find_by(symbol: token_symbol)
-    if current_token_rate.nil?
-      errors.add(:token_symbol, "is invalid or missing exchange rate")
-      return
-    end
+    return if token_rate.nil?
 
-    new_request_amount = (amount * (current_token_rate.price_in_cents || 0.0)).round
+    new_request_amount = (amount * (token_rate.price_in_cents || 0.0)).round
     current_funded_amount = borrower.borrow_requests.funded.sum(:funded_amount)
+
     active_pending_cents = borrower.borrow_requests
       .active
-      .joins("INNER JOIN token_rates ON token_rates.symbol = borrow_requests.token_symbol")
+      .joins(:token_rate)
       .sum(Arel.sql("ROUND(borrow_requests.amount * token_rates.price_in_cents)"))
       .to_i
 
