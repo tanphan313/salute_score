@@ -12,12 +12,7 @@ class BorrowRequestsController < ApplicationController
     ransack_search = BorrowRequest.pending.includes(:borrower).ransack({})
     ransack_search.sorts = order_str
 
-    @page = ransack_search.result.cursor_paginate(
-      cursor: params[:cursor],
-      page_size: params[:per_page] || 20
-    )
-
-    @borrow_requests = @page.records
+    @borrow_requests = ransack_search.result.page(params[:page]).per(params[:per_page] || 20)
   end
 
   def create

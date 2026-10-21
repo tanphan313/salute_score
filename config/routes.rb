@@ -18,4 +18,8 @@ Rails.application.routes.draw do
   post 'validations/check_uniqueness', to: 'validations#check_uniqueness'
 
   resources :borrow_requests, only: [:create, :index]
+
+  namespace :me do
+    resources :borrow_requests, only: %i[index]
+  end
 end

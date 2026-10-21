@@ -12,7 +12,7 @@ class ProfilesController < ApplicationController
     if current_user.update(profile_params)
       @message = "Profile updated successfully"
 
-      render :show
+      render :update
     else
       render_error(
         message: "Validation failed",

@@ -10,7 +10,7 @@ class MasterDataController < ApplicationController
 
   private
   def token_rates
-    TokenRate.active.map do |token_rate|
+    TokenRate.all.map do |token_rate|
       token_rate.attributes.except("created_at", "updated_at")
     end
   end

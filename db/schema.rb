@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_20_174922) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_21_073232) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -37,6 +37,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_20_174922) do
     t.integer "funded_amount"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "repaid_at"
     t.index ["borrower_id"], name: "index_borrow_requests_on_borrower_id"
     t.index ["status"], name: "index_borrow_requests_on_status"
   end
@@ -65,7 +66,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_20_174922) do
     t.string "uid", default: "", null: false
     t.string "encrypted_password", default: "", null: false
     t.json "tokens"
-    t.string "address", null: false
+    t.string "address"
     t.string "user_token"
     t.string "name"
     t.string "avatar_url"
@@ -75,6 +76,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_20_174922) do
     t.string "email"
     t.bigint "country_id"
     t.integer "verification_level", default: 0
+    t.integer "ranking_level", default: 0
     t.integer "custom_max_borrowing_amount"
     t.integer "score", default: 0
     t.index ["address"], name: "index_users_on_address", unique: true
