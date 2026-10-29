@@ -11,14 +11,15 @@ class LendOffer < ApplicationRecord
   enum :lowest_tier, User.ranking_levels, prefix: :tier
   enum :required_verification_level, User.verification_levels, prefix: :verification
 
+  before_validation :normalize_allowed_duration_days
+  before_validation :apply_country_interest_rate_limit, on: :create
+
   validates :token_rate_id, :total_amount, :min_loan_amount, :max_loan_amount, presence: true
   validates :total_amount, :min_loan_amount, :max_loan_amount, numericality: { greater_than: 0 }
   validates :interest_rate, numericality: { greater_than_or_equal_to: 0 }
 
   validate :validate_loan_amounts
   validate :validate_allowed_duration_days
-
-  before_validation :apply_country_interest_rate_limit, on: :create
 
   scope :active, -> { where(status: %i[pending partial_fulfilled]) }
 
@@ -47,6 +48,12 @@ class LendOffer < ApplicationRecord
   end
 
   private
+  def normalize_allowed_duration_days
+    if allowed_duration_days.present?
+      self.allowed_duration_days = allowed_duration_days.map(&:to_i).reject(&:zero?).uniq
+    end
+  end
+
   def validate_loan_amounts
     return if min_loan_amount.blank? || max_loan_amount.blank? || total_amount.blank?
 
@@ -65,7 +72,8 @@ class LendOffer < ApplicationRecord
       return
     end
 
-    invalid_durations = allowed_duration_days.to_a - ALLOWED_DURATIONS
+    durations = allowed_duration_days.to_a.map(&:to_i)
+    invalid_durations = durations - ALLOWED_DURATIONS
     if invalid_durations.any?
       errors.add(:allowed_duration_days, "contains invalid durations: #{invalid_durations.join(', ')}")
     end
@@ -74,8 +82,11 @@ class LendOffer < ApplicationRecord
   def apply_country_interest_rate_limit
     return unless lender&.country.present?
 
-    if self.interest_rate >= lender.country.max_lending_interest_rate.to_f
-      self.interest_rate = lender.country.max_lending_interest_rate.to_f
+    max_rate = lender.country.max_lending_interest_rate.to_f
+    return if max_rate <= 0
+
+    if self.interest_rate >= max_rate
+      self.interest_rate = max_rate
     end
   end
 end

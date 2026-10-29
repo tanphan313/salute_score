@@ -2,7 +2,7 @@ module XamanService
   class CreatePayment
     attr_reader :sender_address, :receiver_address, :amount, :token_rate, :user_token
 
-    def self.call sender_address:, receiver_address:, amount:, token_rate:, user_token: nil
+    def self.call(sender_address:, receiver_address:, amount:, token_rate:, user_token: nil)
       new(sender_address, receiver_address, amount, token_rate, user_token).call
     end
 
@@ -36,7 +36,7 @@ module XamanService
 
     private
     def validate_inputs!
-      raise ArgumentError, "Amount must be greater than 0" if amount <= 0
+      raise ArgumentError, "Amount must be greater than 0" if amount.blank? || amount.to_d <= 0
       raise ArgumentError, "Sender address is required" if sender_address.blank?
       raise ArgumentError, "Receiver address is required" if receiver_address.blank?
       raise ArgumentError, "Token rate is required" if token_rate.blank?
@@ -44,7 +44,7 @@ module XamanService
 
     def build_amount_payload
       if token_rate.symbol.upcase == "XRP"
-        (amount * 1_000_000).to_i.to_s
+        (amount.to_d * 1_000_000).to_i.to_s
       else
         if token_rate.issuer_address.blank?
           raise ArgumentError, "Issuer address is missing for token #{token_rate.symbol}"

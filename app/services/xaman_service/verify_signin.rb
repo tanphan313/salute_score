@@ -2,11 +2,11 @@ module XamanService
   class VerifySignin
     attr_reader :payload_client, :uuid
 
-    def self.call uuid:
+    def self.call(uuid:)
       new(uuid).call
     end
 
-    def initialize uuid
+    def initialize(uuid)
       @uuid = uuid
       @payload_client = Xaman.client.payloads
     end
@@ -35,7 +35,8 @@ module XamanService
         data: {
           account: payload.dig("response", "account"),
           name: payload.dig("response", "account_alias"),
-          avatar_url: payload.dig("response", "account_avatar")
+          avatar_url: payload.dig("response", "account_avatar"),
+          user_token: payload.dig("application", "issued_user_token") || payload.dig("response", "user_token")
         },
         error: nil
       }

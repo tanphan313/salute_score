@@ -16,6 +16,11 @@ class BorrowRequest < ApplicationRecord
   enum :duration_in_days, DURATIONS, prefix: :duration
   enum :status, [:pending, :locked, :funded, :cancelled]
 
+  def duration_in_days=(val)
+    val = val.to_i if val.is_a?(String) && val =~ /\A\d+\z/
+    super(val)
+  end
+
   validates :amount, presence: true, numericality: { greater_than: 0 }
   validates :proposed_interest_rate, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validates :duration_in_days, :token_rate_id, presence: true
@@ -54,19 +59,19 @@ class BorrowRequest < ApplicationRecord
   def interest_amount
     return 0 if amount.nil? || proposed_interest_rate.nil?
 
-    (amount * (proposed_interest_rate || 0.0) / 100.0)
+    (amount.to_d * proposed_interest_rate.to_d / 100.0)
   end
 
   def salute_interest_amount
     return 0 if amount.nil?
 
-    ((amount * 0.5) / 100.0)
+    (amount.to_d * BigDecimal("0.5") / 100.0)
   end
 
   def total_repayment_amount
     return 0 if amount.nil?
 
-    amount + interest_amount + salute_interest_amount
+    amount.to_d + interest_amount + salute_interest_amount
   end
 
   private
