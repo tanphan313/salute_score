@@ -11,7 +11,7 @@ class LendOffer < ApplicationRecord
   enum :lowest_tier, User.ranking_levels, prefix: :tier
   enum :required_verification_level, User.verification_levels, prefix: :verification
 
-  validates :token_symbol, :total_amount, :min_loan_amount, :max_loan_amount, presence: true
+  validates :token_rate_id, :total_amount, :min_loan_amount, :max_loan_amount, presence: true
   validates :total_amount, :min_loan_amount, :max_loan_amount, numericality: { greater_than: 0 }
   validates :interest_rate, numericality: { greater_than_or_equal_to: 0 }
 
@@ -20,9 +20,10 @@ class LendOffer < ApplicationRecord
 
   before_validation :apply_country_interest_rate_limit, on: :create
 
+  scope :active, -> { where(status: %i[pending partial_fulfilled]) }
+
   scope :order_by_interest, ->(direction = :desc) {
-    select("lend_offers.*, (lend_offers.amount * lend_offers.interest_rate) AS calculated_interest")
-      .order(Arel.sql("(lend_offers.amount * lend_offers.interest_rate) #{direction.to_s.upcase}"))
+    order(Arel.sql("lend_offers.interest_rate #{direction.to_s.upcase}"))
   }
 
   def self.ransackable_attributes(_auth_object = nil)
@@ -38,7 +39,7 @@ class LendOffer < ApplicationRecord
   end
 
   def total_borrowed_amount
-    lend_offer_borrowers.where(status: %i[funded repaid]).sum(:amount)
+    lend_offer_borrowers.where(status: :funded).sum(:amount)
   end
 
   def available_amount

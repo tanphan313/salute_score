@@ -42,16 +42,19 @@ namespace :seed_db do
 
   task seed_token_rates: :environment do
     token_rates = [
+      { symbol: "XRP", name: "Ripple XRP", price_in_cents: 55, issuer_address: nil },
       { symbol: "SLT", name: "Salute", price_in_cents: 100, issuer_address: "rfGCeDUdtbzKbXfgvrpG745qdC1hcZBz8S" },
       { symbol: "RLUSD", name: "RLUSD", price_in_cents: 26000, issuer_address: "rMxCKbEDwqr76QuheSUMdEGf4B9xJ8m5De" }
     ]
 
     token_rates.each do |data|
       token_rate = TokenRate.find_or_initialize_by(symbol: data[:symbol])
-      token_rate.update!(
+      attrs = {
         name: data[:name],
         price_in_cents: data[:price_in_cents]
-      )
+      }
+      attrs[:issuer_address] = data[:issuer_address] if token_rate.respond_to?(:issuer_address)
+      token_rate.update!(attrs)
     end
   end
 end

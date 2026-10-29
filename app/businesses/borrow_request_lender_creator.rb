@@ -1,7 +1,7 @@
 class BorrowRequestLenderCreator
-  attr_reader :borrow_request, :lender, :borrower, :token_rate
+  attr_reader :borrow_request, :lender, :borrower, :token_rate, :borrow_request_lender, :payment_payload
 
-  def initialize borrow_request:, lender:
+  def initialize(borrow_request:, lender:)
     @borrow_request = borrow_request
     @lender = lender
     @borrower = borrow_request.borrower
@@ -9,7 +9,7 @@ class BorrowRequestLenderCreator
   end
 
   def create!
-    ApplicationRecord.transaction  do
+    ApplicationRecord.transaction do
       borrow_request.locked!
       create_borrow_request_lender!
       transfer_token!
@@ -18,7 +18,7 @@ class BorrowRequestLenderCreator
 
   private
   def create_borrow_request_lender!
-    BorrowRequestLender.create!(
+    @borrow_request_lender = BorrowRequestLender.create!(
       borrow_request: borrow_request,
       lender: lender,
       locked_until: 5.minutes.from_now
@@ -26,7 +26,7 @@ class BorrowRequestLenderCreator
   end
 
   def transfer_token!
-    XamanService::CreatePayment.(
+    @payment_payload = XamanService::CreatePayment.call(
       sender_address: lender.address,
       receiver_address: borrower.address,
       amount: borrow_request.amount,

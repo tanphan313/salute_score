@@ -7,7 +7,7 @@ module Me
     }.with_indifferent_access.freeze
 
     def index
-      scope = current_user.borrow_requests.includes(:borrower)
+      scope = current_user.borrow_requests.includes(:token_rate)
       scope = scope.where(status: params[:status]) if params[:status].present?
       if (params[:from_date].present? || params[:to_date].present?) && params[:status] == "repaid"
         scope = scope.repaid_between(params[:from_date], params[:to_date])

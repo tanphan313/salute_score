@@ -17,7 +17,7 @@ class LendOffersController < ApplicationController
   }.with_indifferent_access.freeze
 
   def index
-    ransack_search = LendOffer.active.includes(:lender).ransack({})
+    ransack_search = LendOffer.active.includes(:lender, :token_rate).ransack({})
     ransack_search.sorts = order_str
 
     @lend_offers = ransack_search.result.page(params[:page]).per(params[:per_page] || 20)
@@ -49,7 +49,7 @@ class LendOffersController < ApplicationController
   end
 
   def sort_direction
-    %w[asc desc].include?(params[:direction].to_s.downcase) ? params[:direction] : "desc"
+    %w[asc desc].include?(params[:direction].to_s.downcase) ? params[:direction] : "desc"\
   end
 
   def order_str

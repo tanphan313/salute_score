@@ -2,7 +2,8 @@ class BorrowRequest < ApplicationRecord
   belongs_to :borrower, class_name: "User", foreign_key: "borrower_id"
   belongs_to :token_rate
 
-  has_many :borrow_request_lenders
+  has_many :borrow_request_lenders, dependent: :destroy
+  has_many :loans, through: :borrow_request_lenders
 
   DURATIONS = {
     days_7: 7,
@@ -32,18 +33,18 @@ class BorrowRequest < ApplicationRecord
     from_time = Time.zone.parse(from_date.to_s).beginning_of_day rescue nil
     to_time   = Time.zone.parse(to_date.to_s).end_of_day rescue nil
 
-    relation = all
-    relation = relation.where("repaid_at >= ?", from_time) if from_time
-    relation = relation.where("repaid_at <= ?", to_time) if to_time
+    relation = joins(:loans)
+    relation = relation.where("loans.repaid_at >= ?", from_time) if from_time
+    relation = relation.where("loans.repaid_at <= ?", to_time) if to_time
     relation
   }
 
   def self.ransackable_attributes(_auth_object = nil)
-    %w[id borrower_id token_rate_id amount proposed_interest_rate duration_in_days status created_at repaid_at]
+    %w[id borrower_id token_rate_id amount proposed_interest_rate duration_in_days status created_at]
   end
 
   def self.ransackable_associations(_auth_object = nil)
-    %w[borrower token_rate]
+    %w[borrower token_rate loans]
   end
 
   def self.ransackable_scopes(_auth_object = nil)
@@ -70,10 +71,15 @@ class BorrowRequest < ApplicationRecord
 
   private
   def validate_borrower_limit
-    return if token_rate.nil?
+    return if token_rate.nil? || borrower.nil?
 
-    new_request_amount = (amount * (token_rate.price_in_cents || 0.0)).round
-    current_funded_amount = borrower.borrow_requests.funded.sum(:funded_amount)
+    new_request_amount = (amount.to_f * (token_rate.price_in_cents || 0.0)).round
+
+    current_funded_cents = borrower.borrowed_loans
+      .active
+      .joins(:token_rate)
+      .sum(Arel.sql("ROUND(loans.amount * token_rates.price_in_cents)"))
+      .to_i
 
     active_pending_cents = borrower.borrow_requests
       .active
@@ -81,11 +87,11 @@ class BorrowRequest < ApplicationRecord
       .sum(Arel.sql("ROUND(borrow_requests.amount * token_rates.price_in_cents)"))
       .to_i
 
-    total_requested_cents = current_funded_amount + active_pending_cents + new_request_amount
+    total_requested_cents = current_funded_cents + active_pending_cents + new_request_amount
     max_limit_in_cents = borrower.max_borrowing_amount
 
     if total_requested_cents > max_limit_in_cents
-      remaining_limit_cents = [max_limit_in_cents - (current_funded_amount + active_pending_cents), 0].max
+      remaining_limit_cents = [max_limit_in_cents - (current_funded_cents + active_pending_cents), 0].max
       remaining_limit_usd = (remaining_limit_cents / 100.0).round(2)
 
       errors.add(:amount, "exceeds your remaining borrowing limit ($#{remaining_limit_usd} USD available)")

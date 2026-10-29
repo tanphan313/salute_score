@@ -1,5 +1,5 @@
 class BorrowRequestsController < ApplicationController
-  CREATE_PARAMS = %i[amount token_symbol proposed_interest_rate duration_in_days].freeze
+  CREATE_PARAMS = %i[amount token_rate_id proposed_interest_rate duration_in_days].freeze
 
   SORT_COLUMN = {
     created_at: "created_at",
@@ -9,7 +9,7 @@ class BorrowRequestsController < ApplicationController
   }.with_indifferent_access.freeze
 
   def index
-    ransack_search = BorrowRequest.pending.includes(:borrower).ransack({})
+    ransack_search = BorrowRequest.pending.includes(:borrower, :token_rate).ransack({})
     ransack_search.sorts = order_str
 
     @borrow_requests = ransack_search.result.page(params[:page]).per(params[:per_page] || 20)

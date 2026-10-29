@@ -1,6 +1,7 @@
 class TokenRate < ApplicationRecord
   validates :symbol, presence: true, uniqueness: { case_sensitive: false }
   validates :price_in_cents, presence: true, numericality: { greater_than: 0 }
+  validates :issuer_address, presence: true, unless: -> { symbol.to_s.upcase == "XRP" }
 
   def to_cents(token_amount)
     return 0 if price_in_cents.nil? || token_amount.blank?

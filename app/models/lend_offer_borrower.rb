@@ -2,6 +2,7 @@ class LendOfferBorrower < ApplicationRecord
   belongs_to :lend_offer
   belongs_to :borrower, class_name: "User", foreign_key: "borrower_id"
   has_one :token_rate, through: :lend_offer
+  has_one :loan, dependent: :destroy
 
   enum :status, %i[locking funded cancelled]
 
@@ -13,8 +14,6 @@ class LendOfferBorrower < ApplicationRecord
   validate :validate_amount_within_offer_limits, on: :create
 
   delegate :interest_rate, to: :lend_offer
-
-  before_validation :copy_interest_rate_from_offer, on: :create
 
   def interest_amount
     return 0 if amount.nil? || interest_rate.nil?
@@ -41,34 +40,32 @@ class LendOfferBorrower < ApplicationRecord
     total_lender_receive_amount + salute_fee
   end
 
-  def due_date
-    return nil if funded_at.nil? || duration_in_days.blank?
-
-    funded_at + duration_in_days.days
-  end
-
   private
-  def set_funded_at
-    self.funded_at ||= Time.current
-  end
-
   def validate_borrower_tier_and_verification
-    if User.ranking_levels[borrower.ranking_level] < lend_offer.lowest_tier
+    return if borrower.blank? || lend_offer.blank?
+
+    borrower_tier = User.ranking_levels[borrower.ranking_level] || 0
+    required_tier = User.ranking_levels[lend_offer.lowest_tier] || 0
+    if borrower_tier < required_tier
       errors.add(:borrower, "does not meet the required minimum tier level")
     end
 
-    if User.verification_levels[borrower.verification_level] < lend_offer.required_verification_level
+    borrower_verification = User.verification_levels[borrower.verification_level] || 0
+    required_verification = User.verification_levels[lend_offer.required_verification_level] || 0
+    if borrower_verification < required_verification
       errors.add(:borrower, "does not meet the required verification level")
     end
   end
 
   def validate_duration_in_allowed_days
-    unless lend_offer.allowed_duration_days&.include?(duration_in_days.to_i)
-      errors.add(:duration_in_days, "is not supported by this lend offer (allowed: #{lend_offer.allowed_duration_days&.join(', ')})")
+    unless lend_offer&.allowed_duration_days&.include?(duration_in_days.to_i)
+      errors.add(:duration_in_days, "is not supported by this lend offer (allowed: #{lend_offer&.allowed_duration_days&.join(', ')})")
     end
   end
 
   def validate_amount_within_offer_limits
+    return if lend_offer.blank? || amount.blank?
+
     if amount < lend_offer.min_loan_amount
       errors.add(:amount, "is below minimum loan limit ($#{lend_offer.min_loan_amount})")
     end

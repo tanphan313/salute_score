@@ -19,8 +19,8 @@ class User < ApplicationRecord
   has_many :borrow_request_lenders, foreign_key: :lender_id, dependent: :destroy
   has_many :lend_offers, foreign_key: :lender_id, dependent: :destroy
   has_many :lend_offer_borrowers, foreign_key: :borrower_id, dependent: :destroy
-  has_many :borrowed_loans, class_name: Loan.class.name, foreign_key: :borrower_id, inverse_of: :borrower
-  has_many :lent_loans, class_name: Loan.class.name, foreign_key: :lender_id, inverse_of: :lender
+  has_many :borrowed_loans, class_name: Loan.name, foreign_key: :borrower_id, inverse_of: :borrower
+  has_many :lent_loans, class_name: Loan.name, foreign_key: :lender_id, inverse_of: :lender
 
   validates :address, presence: true, uniqueness: true
   validates :name, uniqueness: true, allow_nil: true
@@ -28,7 +28,7 @@ class User < ApplicationRecord
   validates :email, uniqueness: true, allow_nil: true
 
   def default_max_borrowing_amount
-    MAX_BORROWING_LIMITS_IN_CENTS.fetch(verification_level || :wallet, 0)
+    MAX_BORROWING_LIMITS_IN_CENTS.fetch(verification_level || "wallet", 0)
   end
 
   def max_borrowing_amount

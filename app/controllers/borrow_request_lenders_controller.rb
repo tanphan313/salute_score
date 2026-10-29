@@ -8,7 +8,9 @@ class BorrowRequestLendersController < ApplicationController
     ResultMonad.new do
       borrow_request_lender_creator.create!
     end.then do
-      @message = "Borrow request created successfully"
+      @message = "Borrow request lender created successfully"
+      @borrow_request_lender = borrow_request_lender_creator.borrow_request_lender
+      @payment_payload = borrow_request_lender_creator.payment_payload
       render :create, status: :created
     end.rescue do |e|
       render_error(

@@ -5,7 +5,7 @@ class XamanAuthController < ApplicationController
   SIGNIN_TOKEN_TTL = 5.minutes
 
   def request_signin
-    payload_data = Xaman.client.payloads.create_signin
+    payload_data = XamanService::CreateSignin.call
 
     unless payload_data[:success] && payload_data[:data][:uuid].present?
       return render_error(
@@ -50,7 +50,7 @@ class XamanAuthController < ApplicationController
       )
     end
 
-    xaman_data = Xaman.client.payloads.verify_signin(payload_uuid)
+    xaman_data = XamanService::VerifySignin.call(uuid: payload_uuid)
 
     unless xaman_data[:success] && xaman_data[:data][:account].present?
       return render_error(
@@ -70,7 +70,7 @@ class XamanAuthController < ApplicationController
       provider: "xaman",
       name: xaman_data[:data][:name].presence || user.name,
       user_token: xaman_data[:data][:user_token],
-      avatar_url: account_info[:data]["avatar"].presence || user.avatar_url
+      avatar_url: account_info.dig(:data, "avatar").presence || user.avatar_url
     }
 
     unless user.update(attributes)
